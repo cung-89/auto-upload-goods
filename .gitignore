@@ -1,0 +1,10 @@
+output/
+.*profile*/
+.shop-profiles/
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+*.log
+shop.local.json
