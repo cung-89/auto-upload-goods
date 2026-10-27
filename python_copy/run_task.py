@@ -62,6 +62,21 @@ def run(task):
             print('结果目录：' + str(directory), flush=True)
         except Exception as error:
             (directory / 'error.txt').write_text(str(error), encoding='utf-8')
+            # Capture the failing category step too (it precedes draft_product's try).
+            from category_adapter import property_fields
+            from urllib.parse import urlparse
+            diagnostics = []
+            for index, failed_page in enumerate(context.pages):
+                if urlparse(failed_page.url).hostname != 'item.upload.taobao.com':
+                    continue
+                entry = {'page_index': index, 'path': urlparse(failed_page.url).path}
+                try:
+                    entry['fields'] = property_fields(failed_page)
+                    failed_page.screenshot(path=str(directory / f'error-page-{index}.png'), full_page=True, timeout=10000)
+                except Exception as diagnostic_error:
+                    entry['diagnostic_error'] = type(diagnostic_error).__name__
+                diagnostics.append(entry)
+            (directory / 'error-fields.json').write_text(json.dumps(diagnostics, ensure_ascii=False, indent=2), encoding='utf-8')
             print('停止：' + str(error), flush=True)
             raise
         finally:
